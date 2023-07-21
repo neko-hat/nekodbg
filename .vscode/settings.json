@@ -6,6 +6,10 @@
         "__bit_reference": "c",
         "unordered_map": "c",
         "__config": "c",
-        "__nullptr": "c"
+        "__nullptr": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "vector": "c"
     }
 }

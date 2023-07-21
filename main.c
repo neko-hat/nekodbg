@@ -57,7 +57,6 @@ void step_over_bp(pid_t pid)
         waitpid(pid, &wait_status, 0);
         fprint_wait_status(stderr, wait_status);
         set_break_point(pid, bp_list[0]);
-        
     }
 }
 
@@ -238,7 +237,7 @@ void view_register(struct user_regs_struct *regs, pid_t pid, unsigned int op_siz
         printf("R14 0x%llx\n",regs->r14);
         printf("R15 0x%llx\n",regs->r15);
         printf("RBP 0x%llx\n",regs->rbp);
-        printf("RSP 0x%llx\n",regs->rsp);        
+        printf("RSP 0x%llx\n",regs->rsp);
         printf("RIP 0x%llx (opcode -> %s)\n",regs->rip, "Can't read opcode!");
     }
     
