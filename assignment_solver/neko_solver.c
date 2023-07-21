@@ -112,6 +112,21 @@ void continue_exec(pid_t pid)
     waitpid(pid, &wait_status, 0);
 }
 
+void view_stack(unsigned long long rsp, pid_t pid)
+{
+    unsigned long long int data;
+    unsigned long long data2;
+    puts("==========================STACK==========================");
+    for(int i=0; i<10; i++)
+    {
+        data = ptrace(PTRACE_PEEKDATA, pid, rsp+i*8, 0);
+        memcpy(&data2, &data, 8);
+        printf("%#llx: ", rsp+i*8);
+        printf("%#llx\n", data2);
+    }
+    puts("=========================================================");
+}
+
 void usage(void)
 {
     printf("[+]Usage: ./neko_solver silly_chall1\n");
@@ -155,10 +170,35 @@ void debugger (pid_t pid){
     regs.rip = seccond_bp;
     if(ptrace(PTRACE_SETREGS, pid, NULL, &regs))
        puts("can't set");
+    
+    int offset = 0x3a;
     printf("[+]CRITICAL: Patch RAX %#llx -> %#llx\n", old_rax, regs.rax);
-    puts("=========================================================");
-    printf("[+]CRITICAL GET MSG Cracked by neko_hat: ");
+    uint64_t last_bp = 0x00000000004012a5;
+    set_break_point(pid, last_bp);
+    continue_exec(pid);
+    view_regs(&regs, pid);
+    uint64_t neko[3] = {0x2044454b43415243, 0x5f6f6b656e205942, 0x00746168};
+    uint64_t start_addr = regs.rbp - 0x70 + offset;
 
+    view_stack(regs.rbp - 0x70, pid);
+
+    for(int i = 0; i < 3; i++)
+    {
+        data = ptrace(PTRACE_PEEKTEXT, pid, start_addr+i*8, NULL);
+        if(ptrace(PTRACE_POKETEXT, pid, start_addr+i*8, neko[i]))
+            puts("can't apply data");
+        else
+        {
+            printf("[+]CRITICAL: Patch data %#llx -> %#llx in %#llx\n", data, neko[i], start_addr+i*8);
+        }
+    }
+    view_stack(regs.rbp - 0x70, pid);   
+    disable_break_point(pid, bp);
+    regs.rip = bp;
+    if(ptrace(PTRACE_SETREGS, pid, NULL, &regs))
+       puts("can't set");
+    
+    printf("[+]CRITICAL GET MSG: ");
 }
 
 int main(int argc, char*argv[]){
