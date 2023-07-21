@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "stdbool.h": "c",
+        "bitset": "c",
+        "algorithm": "c",
+        "__bit_reference": "c",
+        "unordered_map": "c",
+        "__config": "c",
+        "__nullptr": "c"
+    }
+}
