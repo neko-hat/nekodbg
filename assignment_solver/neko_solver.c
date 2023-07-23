@@ -171,27 +171,33 @@ void debugger (pid_t pid){
     if(ptrace(PTRACE_SETREGS, pid, NULL, &regs))
        puts("can't set");
     
-    int offset = 0x3a;
     printf("[+]CRITICAL: Patch RAX %#llx -> %#llx\n", old_rax, regs.rax);
     uint64_t last_bp = 0x00000000004012a5;
     set_break_point(pid, last_bp);
     continue_exec(pid);
     view_regs(&regs, pid);
-    uint64_t neko[3] = {0x2044454b43415243, 0x5f6f6b656e205942, 0x00746168};
-    uint64_t start_addr = regs.rbp - 0x70 + offset;
+    uint64_t neko[] = {0x4152437b47414c46, 0x5f59425f44454b43, 0x5441485f4f4b454e, 0x00000000007d2121};
+    uint64_t start_addr = regs.rbp - 0x70;
 
     view_stack(regs.rbp - 0x70, pid);
 
-    for(int i = 0; i < 3; i++)
+    for(int i = 0; i < 4; i++)
     {
         data = ptrace(PTRACE_PEEKTEXT, pid, start_addr+i*8, NULL);
         if(ptrace(PTRACE_POKETEXT, pid, start_addr+i*8, neko[i]))
             puts("can't apply data");
         else
         {
-            printf("[+]CRITICAL: Patch data %#llx -> %#llx in %#llx\n", data, neko[i], start_addr+i*8);
+            printf("[+]CRITICAL: Patch Data %#llx -> %#llx in %#llx (-> )", data, neko[i], start_addr+i*8);
+            char *tmp = (char *)neko;
+            for(int j = 0 ; j < 8; j++)
+            {
+                printf("%c", *(tmp+i*8+j));
+            }
+            putchar('\n');
         }
     }
+    printf("[+]CRITICAL: Patched Data -> %s\n", (char *)neko);
     view_stack(regs.rbp - 0x70, pid);   
     disable_break_point(pid, bp);
     regs.rip = bp;
